@@ -39,8 +39,6 @@ class Pagerec(object):
  """
 Format 
 page	adhy.	from v.	to v.	ipage
-226	1	1	9a	1
-227	1	9b	16	2
 
 Note the first line (column names) is ignored
 """ 
@@ -121,11 +119,6 @@ Note the first line (column names) is ignored
    self.fromx = ''
   e = {
    'page':int(self.page),
-   'adhy':int(self.adhy),
-   'v1':int(self.fromv),
-   'v2':int(self.tov),
-   'x1':self.fromvx,
-   'x2':self.tovx,
    'ipage':self.ipage,
    'vp':self.vpstr
   }
@@ -135,6 +128,8 @@ def init_pagerecs(filein):
  """ filein is a tsv file, with first line as fieldnames
  """
  recs = []
+ previpage = None
+ ndup = 0 # of duplicate ipage records dropped
  with codecs.open(filein,"r","utf-8") as f:
   for iline,line in enumerate(f):
    if (iline == 0):
@@ -144,7 +139,12 @@ def init_pagerecs(filein):
    pagerec = Pagerec(line,iline)
    if pagerec.status:
     # No problems noted
-    recs.append(pagerec)
+    ipage = pagerec.ipage
+    if previpage == ipage:
+     ndup = ndup + 1
+    else:
+     recs.append(pagerec)
+     previpage = ipage
    else:
     lnum = iline + 1
     print('Problem at line # %s:' % lnum)
@@ -152,6 +152,7 @@ def init_pagerecs(filein):
     print('message=',pagerec.status_message)
     exit(1)
  print(len(recs),'Success: Page records read from',filein)
+ print(ndup,"records with duplicate ipage are dropped")
  return recs
 
 
@@ -173,53 +174,23 @@ def write_recs(fileout,data):
   
  print('json data written to',fileout)
 
-def check1_adhy(pagerecs):
- prev = None
+def check1(pagerecs):
+ """ check for ipage 
+ """
+ nerr = 0
+ prevrec = None
  for irec,rec in enumerate(pagerecs):
   lnum = rec.iline + 1
   line = rec.line
   if irec == 0:
-   # first record has adhy = 1
-   if rec.adhy != 1:  # 0 = prastava
-    print('check1_adhy: first adhy not 1.')
-    print('lnum=%s, line=%s' % (lnum,line))
-    exit(1)
-   prev = rec
-   continue
-  if prev.adhy == rec.adhy:
-   pass # no problem
-  elif (prev.adhy + 1) == rec.adhy:
-   pass
-  else:
-   # unexpected
-   print('check1_adhy. adhy=%s, expected %s' %(rec.adhy,prev.adhy + 1))
-   print('lnum=%s, line=%s' % (lnum,line))
-   exit(1)
-  # reset prev
-  prev = rec
- print('pagerecs passes check1_adhy ')
-
-def unusedcheck1_errmsg(prev,rec,lnum):
- print('check1 error')
- print('prev lnum=%s: line=%s' % (lnum-1,prev.line))
- print(' rec lnum=%s: line=%s' %(lnum,rec.line))
- exit(1)
-
-def check1(pagerecs):
- """ check that v1 = v2_prev + 1 when ...
- """
- check1_adhy(pagerecs)
- 
- nerr = 0
- for irec,rec in enumerate(pagerecs):
-  lnum = rec.iline + 1
-  line = rec.line
-  if not (rec.fromv <= rec.tov):
+   assert rec.ipage == 1
+  elif rec.ipage != prevrec.ipage + 1:
    print('check1 error')
-   print(' rec lnum=%s: line=%s' %(lnum,rec.line))
-   exit(1)
-
- print("check1 finds no problems")
+   print(' prevrec lnum=%s: line=%s' %(lnum,rec.line))
+   print(' prevrec lnum=%s: line=%s' %(lnum,rec.line))
+   nerr = nerr + 1
+  prevrec = rec
+ print("check1 finds %s problems" % nerr)
 
 if __name__ == "__main__":
  filein=sys.argv[1]  # tab-delimited index file

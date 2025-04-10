@@ -4,10 +4,16 @@ function makelink(indexobj,txt) {
  let href = window.location.href;
  //let url = new URL(href);
  //let search = url.search  // a string, possibly empty
- let base = href.replace(/[?].*$/,'');
- let tantra = indexobj.tantra;
- let v2 = indexobj.v2;
- let newsearch = `?${tantra},${v2}`;
+ // href: main.js:7 http://localhost/sanskrit-lexicon-scans/vajasasa/app1/?5,2
+ //console.log(href);
+ let base = href.replace(/app1.*$/,'');
+ //console.log(base);
+ //let adhy = indexobj.adhy;
+ //let v2 = indexobj.v2;
+ // switch to app0 
+ //let newsearch = `?${adhy},${v2}`;
+ let ipage = indexobj.ipage
+ let newsearch = `app0/?${ipage}`;
  let newhref = base + newsearch;
  let html = `<a class="nppage" href="${newhref}"><span class="nppage">${txt}</span></a>`;
  return html;
@@ -28,10 +34,10 @@ function display_ipage_id(indexes) {
 function get_pdfpage_from_index(indexobj) {
 /* indexobj assumed an element of indexdata
  return name of file with the given page
- panc-029.pdf  example vp = "029" 
+ vaj-NNNN.pdf 
 */
  let vp = indexobj['vp'];
- let pdf = `panc-${vp}.pdf`;
+ let pdf = `vaj-${vp}.pdf`;
  return pdf;
 }
 
@@ -61,7 +67,7 @@ function get_indexobjs_from_verse(verse) {
  let icur = -1;
  for (let i=0; i < indexdata.length; i++ ) {
   let obj = indexdata[i];
-  if (obj.tantra != verse[0]) {
+  if (obj.adhy != verse[0]) {
    continue;
   }
   if ((obj.v1 <= verse[1]) && (verse[1] <= obj.v2)) {

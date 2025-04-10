@@ -2,12 +2,9 @@
 
 function makelink(indexobj,txt) {
  let href = window.location.href;
- //let url = new URL(href);
- //let search = url.search  // a string, possibly empty
  let base = href.replace(/[?].*$/,'');
  let ipage = indexobj.ipage;
- let v2 = 1; // first line
- let newsearch = `?${ipage},${v2}`;
+ let newsearch = `?${ipage}`;
  let newhref = base + newsearch;
  let html = `<a class="nppage" href="${newhref}"><span class="nppage">${txt}</span></a>`;
  return html;
@@ -28,10 +25,10 @@ function display_ipage_id(indexes) {
 function get_pdfpage_from_index(indexobj) {
 /* indexobj assumed an element of indexdata
  return name of file with the given page
- panc_029.pdf  example vp = "029" 
+ vaj-1000.pdf  example vp = "1000" 
 */
  let vp = indexobj['vp'];
- let pdf = `panc-${vp}.pdf`;
+ let pdf = `vaj-${vp}.pdf`;
  return pdf;
 }
 
@@ -57,29 +54,22 @@ function display_ipage_html(indexes) {
 
 function get_indexobjs_from_verse(verse) {
  // uses indexdata from index.js
- // verse is a 2-tuple of ints
+ // verse is a 1-tuple of ints
  // console.log('get_indexobjs_from_verse:',verse);
  let icur = -1;
  for (let i=0; i < indexdata.length; i++ ) {
   let obj = indexdata[i];
   if (obj.ipage != verse[0]) {continue;}
-  // verse[1] is linenum within page. Should be > 1.
-  // max value not know,  normally about 25.
-  // arbitrary max 40 lines per page
-  if ((verse[1] < 1) || (verse[1] > 40)) {
-   break; // icur will be -1, indicating invalid
-  } else {
-   icur = i;
-   break;
-  }
+  icur = i;
+  break;
  }
  let ans, prevobj, curobj, nextobj
  if (icur == -1) {
   // default
   prevobj = indexdata[0];
   curobj = indexdata[0];
-  nextobj = indexdata[0];
-  ans  = [indexdata[0],indexdata[1],indexdata[2]];
+  nextobj = indexdata[1];
+  //ans  = [indexdata[0],indexdata[1],indexdata[2]];
  } else {
   curobj = indexdata[icur];
   if (icur <= 0) {
@@ -99,21 +89,21 @@ function get_indexobjs_from_verse(verse) {
 }
 
 function get_verse_from_url() {
- /* return 2-tuple of int numbers derived from url search string.
-    Returns [0,0]
+ /* return 1-tuple of int numbers derived from url search string.
+    Returns [0] on error
 */
  let href = window.location.href;
  let url = new URL(href);
  // url = http://xyz.com?X ,
  // search = ?X
  let search = url.search;  // a string, possibly empty
- let defaultval = [0,0]; // default value (title verse)
- let x = search.match(/^[?]([0-9]+),([0-9]+)$/);
+ let defaultval = [0]; // default value
+ let x = search.match(/^[?]([0-9]+)$/);
  if (x == null) {
   return defaultval;
  }
  // convert to ints
- let nparm = 2;
+ let nparm = 1;
  iverse = [];
  for(let i=0;i<nparm;i++) {
   iverse.push(parseInt(x[i+1]));
